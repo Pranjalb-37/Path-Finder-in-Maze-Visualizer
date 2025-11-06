@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>🚀 Astronaut Maze Pathfinder</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: url('https://cdn.dribbble.com/users/1107325/screenshots/6869955/2.gif') no-repeat center center fixed;
+            background-size: cover;
+            overflow-x: hidden;
+            color: #fff;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            color: #fff;
+            margin-top: 30px;
+            text-shadow: 0px 0px 20px rgba(255, 255, 255, 0.9);
+            letter-spacing: 1px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 50, 0.7);
+            border-radius: 25px;
+            padding: 15px 30px;
+            width: fit-content;
+            margin: 20px auto;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+        }
+
+        label {
+            margin: 0 10px;
+            font-size: 1rem;
+            color: #fff;
+        }
+
+        select, input[type=range] {
+            margin: 0 10px;
+            border-radius: 10px;
+            padding: 6px;
+            background: #1e293b;
+            color: #fff;
+            border: 1px solid #4f46e5;
+            outline: none;
+        }
+
+        button {
+            background: linear-gradient(135deg, #6366f1, #4338ca);
+            border: none;
+            color: white;
+            padding: 10px 16px;
+            margin: 0 6px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.5);
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #818cf8, #4f46e5);
+            transform: scale(1.05);
+        }
+
+        #maze {
+            display: grid;
+            justify-content: center;
+            margin: 40px auto;
+            border-radius: 15px;
+            overflow: hidden;
+            background: rgba(0, 0, 40, 0.7);
+            padding: 10px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+        }
+
+        .cell {
+            width: 35px;
+            height: 35px;
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            margin: 2px;
+            transition: background-color 0.2s ease;
+        }
+
+        .wall {
+            background-color: #1e3a8a;
+            box-shadow: inset 0 0 6px #000;
+        }
+
+        .visited {
+            background-color: #facc15;
+        }
+
+        .path {
+            background-color: #10b981;
+        }
+
+        .start {
+            background-image: url('https://cdn-icons-png.flaticon.com/512/3049/3049120.png');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .end {
+            background-image: url('https://cdn-icons-png.flaticon.com/512/3212/3212608.png');
+            background-size: cover;
+            background-position: center;
+        }
+
+        footer {
+            text-align: center;
+            color: #fff;
+            opacity: 0.7;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧑‍🚀 Help the Astronaut Reach the Space Station 🛰️</h1>
+
+    <div class="controls">
+        <label for="grid-size">Grid:</label>
+        <select id="grid-size" onchange="createGrid()">
+            <option value="10">10x10</option>
+            <option value="15">15x15</option>
+            <option value="20">20x20</option>
+        </select>
+
+        <label for="speed">Speed:</label>
+        <input type="range" id="speed" min="50" max="500" value="200">
+
+        <button onclick="clearGrid()">🧹 Clear</button>
+        <button onclick="generateRandomMaze()">🎲 Random Maze</button>
+        <button onclick="solveMaze()">🚀 Find Path</button>
+    </div>
+
+    <div id="maze"></div>
+
+    <footer>✨ Powered by Backtracking Algorithm | Made with 💜 in Space ✨</footer>
+
+    <script>
+        let rows = 10, cols = 10;
+        let grid = [], speed = 200;
+
+        const mazeContainer = document.getElementById("maze");
+        const speedInput = document.getElementById("speed");
+        const gridSizeInput = document.getElementById("grid-size");
+
+        speedInput.addEventListener("input", e => speed = parseInt(e.target.value));
+
+        function createGrid() {
+            rows = cols = parseInt(gridSizeInput.value);
+            mazeContainer.innerHTML = "";
+            mazeContainer.style.gridTemplateColumns = `repeat(${cols}, 35px)`;
+            mazeContainer.style.gridTemplateRows = `repeat(${rows}, 35px)`;
+            grid = [];
+
+            for (let r = 0; r < rows; r++) {
+                let row = [];
+                for (let c = 0; c < cols; c++) {
+                    const cell = document.createElement("div");
+                    cell.classList.add("cell");
+                    cell.addEventListener("click", () => cell.classList.toggle("wall"));
+                    mazeContainer.appendChild(cell);
+                    row.push(cell);
+                }
+                grid.push(row);
+            }
+
+            grid[0][0].classList.add("start");
+            grid[rows - 1][cols - 1].classList.add("end");
+        }
+
+        function clearGrid() {
+            grid.forEach(row => row.forEach(cell => {
+                cell.className = "cell";
+            }));
+            grid[0][0].classList.add("start");
+            grid[rows - 1][cols - 1].classList.add("end");
+        }
+
+        function generateRandomMaze() {
+            clearGrid();
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (Math.random() < 0.3 && !(r === 0 && c === 0) && !(r === rows - 1 && c === cols - 1)) {
+                        grid[r][c].classList.add("wall");
+                    }
+                }
+            }
+        }
+
+        async function solveMaze() {
+            const maze = grid.map(row => row.map(cell => cell.classList.contains("wall") ? 0 : 1));
+
+            const response = await fetch("/solve", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ maze })
+            });
+
+            const data = await response.json();
+            const path = data.solution;
+
+            if (!path) {
+                alert("No path found!");
+                return;
+            }
+
+            for (const [r, c] of path) {
+                if (!(r === 0 && c === 0) && !(r === rows - 1 && c === cols - 1)) {
+                    grid[r][c].classList.add("path");
+                    await new Promise(res => setTimeout(res, speed));
+                }
+            }
+        }
+
+        createGrid();
+    </script>
+</body>
+</html>
